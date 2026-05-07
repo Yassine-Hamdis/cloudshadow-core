@@ -42,19 +42,33 @@ export const useWebSocket = () => {
               if (Number(message.companyId) !== Number(companyId)) return
 
               if (message.type === 'NEW_METRIC') {
-                const metric = message.data
-                appendMetric(metric)
+                const metric = message.data || {}
 
+                // Normalize serverId across possible payload shapes
                 const serverId = Number(metric?.serverId ?? metric?.serverID ?? metric?.server?.id)
+
+                // Normalize timestamp field: prefer common keys, keep original if present
                 const tsValue = metricTimestamp(metric)
-                const tsMs = parseTimestampMs(tsValue)
+
+                const normalized = {
+                  ...metric,
+                  // ensure serverId exists on the metric so stores that expect it work
+                  serverId: Number.isFinite(serverId) ? serverId : metric.serverId,
+                  // keep existing timestamp keys but also provide a canonical `timestamp` if missing
+                  timestamp: metric.timestamp ?? metric.collectedAt ?? metric.createdAt ?? metric.time ?? metric.ts ?? tsValue,
+                }
+
+                // Append normalized metric so metricsStore has consistent keys
+                appendMetric(normalized)
+
+                const tsMs = parseTimestampMs(normalized.timestamp)
 
                 if (Number.isFinite(serverId) && Number.isFinite(tsMs)) {
                   window.dispatchEvent(
                     new CustomEvent('server-status-change', {
                       detail: {
                         serverId,
-                        serverName: metric?.serverName ?? metric?.name,
+                        serverName: normalized?.serverName ?? normalized?.name,
                         lastSeen: new Date(tsMs).toISOString(),
                         status: 'ONLINE',
                       },

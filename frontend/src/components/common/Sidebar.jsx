@@ -45,8 +45,10 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const { role } = useAuthStore()
+  console.log('[Sidebar] User role:', role)
 
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role))
+  console.log('[Sidebar] Visible items:', visibleItems.map(i => i.label))
   const roleLabel = role === 'ADMIN' ? 'Admin Workspace' : 'User Workspace'
 
   return (

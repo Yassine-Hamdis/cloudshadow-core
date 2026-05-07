@@ -27,8 +27,10 @@ const metricTimestampMs = (metric) =>
   )
 
 export default function MetricsPage() {
-  const { metricsByServer, latestByServer, setMetrics, setLatest } = useMetricsStore()
+  console.log('[MetricsPage] Page is rendering')
+  const { metricsByServer, latestByServer, setMetrics, setLatest, appendMetric } = useMetricsStore()
   const { role } = useAuthStore()
+  console.log('[MetricsPage] Current role:', role)
 
   const [servers, setServers]       = useState([])
   const [selectedId, setSelectedId] = useState(null)
@@ -48,9 +50,11 @@ export default function MetricsPage() {
   // ── Load server list + periodically refresh for status updates ─────────────
   useEffect(() => {
     const load = async () => {
+      console.log('[MetricsPage] Starting server fetch...')
       setLoadingServers(true)
       try {
         const srvs = await getServers()
+        console.log('[MetricsPage] Got servers:', srvs.length)
         setServers(srvs)
         setServerNamesById(
           Object.fromEntries(srvs.map((s) => [Number(s.id), s.name]))
@@ -66,10 +70,9 @@ export default function MetricsPage() {
           } : { lastSeen: null, isOnline: false }
         })
         setServerStatuses(statuses)
-      } catch {
-        if (role === 'ADMIN') {
-          toast.error('Failed to load servers')
-        }
+      } catch (error) {
+        console.error('[MetricsPage] Failed to load servers:', error.response?.status, error.message)
+        console.error('[MetricsPage] Full error:', error)
       } finally {
         setLoadingServers(false)
       }
@@ -79,7 +82,7 @@ export default function MetricsPage() {
     // Refresh server status every 30 seconds so OFFLINE/ONLINE updates are reflected
     const interval = setInterval(load, 30000)
     return () => clearInterval(interval)
-  }, [role])
+  }, [])
 
   const serverOptions = useMemo(() => {
     const map = new Map()
@@ -213,7 +216,7 @@ export default function MetricsPage() {
       const allServerMetrics = await getMetricsByServer(selectedId)
       const data = allServerMetrics.filter((m) => {
         const ts = metricTimestampMs(m)
-        return Number.isFinite(ts) && ts >= fromMs && ts <= nowMs + 60_000
+        return Number.isFinite(ts) && ts >= fromMs
       })
 
       setMetrics(selectedId, data)

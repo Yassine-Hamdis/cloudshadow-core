@@ -20,9 +20,11 @@ const getMetricStatus = (value) => {
 }
 
 export default function OverviewPage() {
+  console.log('[OverviewPage] Page is rendering')
   const { metricsByServer, latestByServer, setMetrics, setLatest } = useMetricsStore()
   const { alerts, criticalCount } = useAlertsStore()
   const { role } = useAuthStore()
+  console.log('[OverviewPage] Current role:', role)
 
   const [servers, setServers]         = useState([])
   const [selectedId, setSelectedId]   = useState(null)
@@ -41,9 +43,11 @@ export default function OverviewPage() {
   // ── Load servers + their latest metrics + periodically refresh status ────────
   useEffect(() => {
     const load = async () => {
+      console.log('[OverviewPage] Starting server fetch...')
       setLoading(true)
       try {
         const srvs = await getServers()
+        console.log('[OverviewPage] Got servers:', srvs.length)
         setServers(srvs)
         setServerNamesById(
           Object.fromEntries(srvs.map((s) => [Number(s.id), s.name]))
@@ -82,10 +86,9 @@ export default function OverviewPage() {
           })
           setSelectedId(worst.id)
         }
-      } catch {
-        if (role === 'ADMIN') {
-          toast.error('Failed to load servers')
-        }
+      } catch (error) {
+        console.error('[OverviewPage] Failed to load servers:', error.response?.status, error.message)
+        console.error('[OverviewPage] Full error:', error)
       } finally {
         setLoading(false)
       }
@@ -95,7 +98,7 @@ export default function OverviewPage() {
     // Refresh server status every 30 seconds so OFFLINE/ONLINE updates are reflected
     const interval = setInterval(load, 30000)
     return () => clearInterval(interval)
-  }, [role])
+  }, [])
 
   const serverOptions = useMemo(() => {
     const map = new Map()
