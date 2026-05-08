@@ -1,9 +1,0 @@
-# ─── CloudShadow Namespace ────────────────────────────────────────────────
-# All CloudShadow services live in this namespace
-# Isolates our app from other K8s workloads
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: cloudshadow
-  labels:
-    app: cloudshadow

@@ -1,9 +1,0 @@
-# ─── Monitoring Namespace ─────────────────────────────────────────────────
-# Separate namespace for monitoring components
-# Keeps monitoring isolated from app services
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: monitoring
-  labels:
-    app: cloudshadow-monitoring
