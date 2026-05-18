@@ -35,6 +35,5 @@ build/
 # ─── Environment — NEVER PUSH SECRETS ────────────────────────────────────
 .env
 *.env
-application-docker.properties
 
 docker-compose.yml
